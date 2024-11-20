@@ -1,0 +1,13 @@
+- name: Setup development environment
+  hosts: all
+  tasks:
+    - name: Include OS-specific vars
+      include_vars: "{{ ansible_os_family | lower }}.yml"
+
+    - name: Run Darwin tasks
+      include_tasks: tasks/darwin.yml
+      when: ansible_os_family == "Darwin"
+
+    - name: Run Windows tasks
+      include_tasks: tasks/windows.yml
+      when: ansible_os_family == "Windows"
