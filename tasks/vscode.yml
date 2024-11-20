@@ -1,0 +1,91 @@
+---
+# Install VS Code
+- name: Install VS Code
+  { { pkg_mgr } }:
+    name: "{{ 'visual-studio-code' if ansible_os_family == 'Darwin' else 'vscode' }}"
+    state: present
+  become: yes
+  tags: ["vscode", "installation"]
+
+# Common VS Code extensions list
+- name: Set common extensions
+  set_fact:
+    vscode_extensions:
+      # Themes
+      - sdras.night-owl
+      - github.github-vscode-theme
+      - dracula-theme.theme-dracula
+      - material-theme.material-theme
+      # General Development
+      - formulahendry.code-runner
+      - eamodio.gitlens
+      - mhutchie.git-graph
+      - usernamehw.errorlens
+      - streetsidesoftware.code-spell-checker
+      - esbenp.prettier-vscode
+      - wayou.vscode-todo-highlight
+      - vscode-icons-team.vscode-icons
+      - aaron-bond.better-comments
+      - mikestead.dotenv
+      # JavaScript/TypeScript
+      - dbaeumer.vscode-eslint
+      - ms-vscode.vscode-typescript-next
+      - wix.vscode-import-cost
+      - christian-kohler.npm-intellisense
+      - christian-kohler.path-intellisense
+      # Python
+      - ms-python.python
+      - ms-python.vscode-pylance
+      - ms-toolsai.jupyter
+      - njpwerner.autodocstring
+      - ms-python.black-formatter
+      # Remote Development
+      - ms-vscode-remote.remote-ssh
+      - ms-vscode.remote-explorer
+
+# Install extensions
+- name: Install VS Code extensions
+  shell: "{{ 'code' if ansible_os_family == 'Darwin' else 'cmd.exe /c code' }} --install-extension {{ item }}"
+  loop: "{{ vscode_extensions }}"
+  tags: ["vscode", "extensions"]
+
+# Common settings
+- name: Set VS Code settings
+  set_fact:
+    vscode_settings:
+      workbench.colorTheme: "Night Owl"
+      editor.fontFamily: "{{ 'JetBrains Mono, Menlo, Monaco' if ansible_os_family == 'Darwin' else 'JetBrains Mono, Consolas' }}, 'Courier New', monospace"
+      editor.fontSize: 14
+      editor.lineHeight: 24
+      editor.fontLigatures: true
+      editor.renderWhitespace: "boundary"
+      editor.formatOnSave: true
+      editor.defaultFormatter: "esbenp.prettier-vscode"
+      explorer.confirmDelete: false
+      files.trimTrailingWhitespace: true
+      terminal.integrated.fontSize: 14
+      workbench.iconTheme: "vscode-icons"
+      git.enableSmartCommit: true
+      javascript.updateImportsOnFileMove.enabled: "always"
+      typescript.updateImportsOnFileMove.enabled: "always"
+      python.formatting.provider: "black"
+      python.linting.enabled: true
+      "[python]":
+        editor.formatOnSave: true
+        editor.defaultFormatter: "ms-python.black-formatter"
+      "[javascript]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+      "[typescript]":
+        editor.defaultFormatter: "esbenp.prettier-vscode"
+
+# Ensure settings directory exists and write settings
+- name: Ensure VS Code settings directory exists
+  file:
+    path: "{{ settings_path }}"
+    state: directory
+
+- name: Configure VS Code settings
+  copy:
+    dest: "{{ settings_path }}/settings.json"
+    content: "{{ vscode_settings | to_nice_json }}"
+  tags: ["vscode", "settings"]

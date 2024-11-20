@@ -1,0 +1,54 @@
+---
+- name: Set Python facts
+  set_fact:
+    python_packages:
+      - pipenv
+      - black
+      - flake8
+      - mypy
+      - pytest
+      - pytest-cov
+      - ipython
+      - jupyter
+      - pre-commit
+      - rich
+      - httpx
+      - python-dotenv
+      - pydantic
+      - fastapi
+      - uvicorn
+
+- name: Install Python
+  { { pkg_mgr } }:
+    name: python
+    state: present
+    become: yes
+  tags: ["python", "installation"]
+
+- name: Install Poetry
+  block:
+    - name: Install Poetry (MacOS)
+      shell: curl -sSL https://install.python-poetry.org | python3 -
+      args:
+        creates: "{{ ansible_env.HOME }}/.local/bin/poetry"
+      tags: ["python", "poetry"]
+      when: is_mac
+
+    - name: Install Poetry (Windows)
+      win_shell: (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
+      args:
+        creates: "{{ ansible_env.USERPROFILE }}\\AppData\\Roaming\\Python\\Scripts\\poetry.exe"
+      when: is_windows
+
+- name: Install Python packages (MacOS)
+  pip:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ python_packages }}"
+  tags: ["python", "packages"]
+  when: is_mac
+
+- name: Install Python packages (Windows)
+  win_shell: pip install {{ item }}
+  loop: "{{ python_packages }}"
+  when: is_windows

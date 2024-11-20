@@ -1,0 +1,37 @@
+# templates/tmux.conf.j2
+# Set prefix to Ctrl-a
+unbind C-b
+set -g prefix C-a
+bind C-a send-prefix
+
+# Use vi keys
+setw -g mode-keys vi
+
+# Mouse support
+set -g mouse on
+
+# Start windows and panes at 1, not 0
+set -g base-index 1
+setw -g pane-base-index 1
+
+# Better splits
+bind | split-window -h -c "#{pane_current_path}"
+bind - split-window -v -c "#{pane_current_path}"
+
+# List of plugins
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @plugin 'dracula/tmux'
+
+# Dracula theme settings
+set -g @dracula-show-battery false
+set -g @dracula-show-network false
+set -g @dracula-show-weather false
+set -g @dracula-show-powerline true
+set -g @dracula-military-time true
+
+# Initialize TMUX plugin manager
+run '~/.tmux/plugins/tpm/tpm'

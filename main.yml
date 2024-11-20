@@ -1,13 +1,16 @@
+---
 - name: Setup development environment
   hosts: all
+  vars:
+    pkg_mgr: "{{ 'homebrew' if ansible_os_family == 'Darwin' else 'win_chocolatey' }}"
+    is_mac: "{{ ansible_os_family == 'Darwin' }}"
+    is_windows: "{{ ansible_os_family == 'Windows' }}"
+    vscode_settings_path: "{{ ansible_env.HOME + '/Library/Application Support/Code/User' if ansible_os_family == 'Darwin' else ansible_env.APPDATA + '\\Code\\User' }}"
   tasks:
-    - name: Include OS-specific vars
-      include_vars: "{{ ansible_os_family | lower }}.yml"
-
-    - name: Run Darwin tasks
-      include_tasks: tasks/darwin.yml
-      when: ansible_os_family == "Darwin"
-
-    - name: Run Windows tasks
-      include_tasks: tasks/windows.yml
-      when: ansible_os_family == "Windows"
+    - name: Include task files
+      block:
+        - include_tasks: tasks/main.yml
+        - include_tasks: tasks/js.yml
+        - include_tasks: tasks/python.yml
+        - include_tasks: tasks/vscode.yml
+        - include_tasks: tasks/terminal.yml

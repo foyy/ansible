@@ -1,0 +1,68 @@
+---
+- name: Set terminal facts
+  set_fact:
+    zsh_plugins:
+      - zsh-users/zsh-autosuggestions
+      - zsh-users/zsh-syntax-highlighting
+      - zsh-users/zsh-completions
+      - djui/alias-tips
+      - romkatv/powerlevel10k
+
+- name: Install terminal packages (MacOS)
+  homebrew:
+    name:
+      - alacritty
+      - tmux
+      - zsh
+    state: present
+  become: yes
+  tags: ["terminal", "packages"]
+  when: is_mac
+
+- name: Install Alacritty (Windows)
+  win_chocolatey:
+    name: alacritty
+    state: present
+  when: is_windows
+
+# Oh My Zsh installation
+- name: Install Oh My Zsh (MacOS)
+  shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  args:
+    creates: "{{ ansible_env.HOME }}/.oh-my-zsh"
+  when: is_mac
+
+# Install popular ZSH plugins (MacOS only)
+- name: Install ZSH plugins (MacOS)
+  block:
+    - name: Clone ZSH plugins
+      git:
+        repo: "https://github.com/{{ item }}"
+        dest: "{{ ansible_env.HOME }}/.oh-my-zsh/custom/plugins/{{ item | basename }}"
+      loop: "{{ zsh_plugins }}"
+      tags: ["terminal", "zsh", "plugins"]
+
+    - name: Install Powerlevel10k fonts
+      homebrew_cask:
+        name: font-meslo-lg-nerd-font
+        state: present
+
+    - name: Configure .zshrc
+      template:
+        src: templates/zshrc.j2
+        dest: "{{ ansible_env.HOME }}/.zshrc"
+  when: is_mac
+
+# Tmux configuration (MacOS only)
+- name: Configure tmux (MacOS)
+  block:
+    - name: Install Tmux Plugin Manager
+      git:
+        repo: https://github.com/tmux-plugins/tpm
+        dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
+
+    - name: Configure tmux
+      template:
+        src: templates/tmux.conf.j2
+        dest: "{{ ansible_env.HOME }}/.tmux.conf"
+  when: is_mac

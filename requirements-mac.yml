@@ -1,0 +1,8 @@
+---
+collections:
+  # For package management
+  - name: community.general
+    version: "6.3.0"
+  # For Python and pip
+  - name: ansible.posix
+    version: "1.5.1"

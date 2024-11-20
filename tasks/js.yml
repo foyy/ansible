@@ -1,0 +1,54 @@
+---
+- name: Set Node.js installation facts
+  set_fact:
+    npm_global_packages:
+      - typescript
+      - eslint
+      - prettier
+      - ts-node
+      - nodemon
+      - jest
+      - "@types/node"
+      - "@types/jest"
+
+- name: Install Node.js environment (MacOS)
+  block:
+    - name: Install nvm
+      shell: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+      args:
+        creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+      tags: ["node", "nvm"]
+
+    - name: Install Node.js LTS
+      shell: . {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm install --lts
+      args:
+        executable: /bin/bash
+      tags: ["node", "nodejs"]
+  when: is_mac
+
+- name: Install Node.js environment (Windows)
+  block:
+    - name: Install Node.js and npm
+      win_chocolatey:
+        name: nodejs-lts
+        state: present
+
+    - name: Install nvm-windows
+      win_chocolatey:
+        name: nvm
+        state: present
+  when: is_windows
+
+- name: Install global npm packages
+  npm:
+    name: "{{ item }}"
+    global: yes
+    state: present
+  loop: "{{ npm_global_packages }}"
+  tags: ["node", "npm", "packages"]
+  when: is_mac
+
+- name: Install global npm packages (Windows)
+  win_shell: npm install -g {{ item }}
+  loop: "{{ npm_global_packages }}"
+  when: is_windows
